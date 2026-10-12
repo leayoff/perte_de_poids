@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cap sur le 10 km – calendrier repas et séances</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1EC; --card:#FAFBF8; --ink:#12231E; --mut:#5D6D66; --line:#D2D9D3;
+  --run:#D9A400; --swim:#2C73C4; --str:#C23B3B; --long:#2E8B57; --walk:#8A958F; --race:#12231E;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.45}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--swim);outline-offset:2px}
+
+.wrap{max-width:1080px;margin:0 auto;padding:18px 14px 40px}
+header.top{display:grid;gap:14px;margin-bottom:18px}
+h1{margin:0;font-weight:800;font-size:clamp(1.9rem,6vw,3rem);line-height:1.02;letter-spacing:-.02em}
+.sub{margin:6px 0 0;color:var(--mut);max-width:60ch}
+.count{display:inline-block;margin-top:10px;padding:6px 12px;border-radius:999px;background:var(--ink);color:#fff;font-weight:600;font-size:.9rem}
+
+.profile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px}
+.profile h2{margin:0 0 2px;font-size:.95rem;font-weight:600}
+.profile p{margin:0 0 4px;color:var(--mut);font-size:.8rem}
+.profile svg{width:100%;height:auto;display:block}
+.profile .pt{cursor:pointer}
+
+.layout{display:grid;gap:16px}
+@media(min-width:860px){.layout{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}.detail{position:sticky;top:12px}}
+
+.cal{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.nav h2{margin:0;font-size:1.25rem;font-weight:800;text-transform:capitalize}
+.nav button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px;cursor:pointer;font-weight:600}
+.nav button:disabled{opacity:.35;cursor:default}
+.nav .today{margin-left:auto}
+.dows,.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dows span{text-align:center;font-size:.75rem;color:var(--mut);padding:2px 0}
+.cell{position:relative;min-height:62px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:5px 5px 4px 9px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+.cell::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c,transparent)}
+.cell .n{font-size:.78rem;color:var(--mut);font-weight:600}
+.cell .ic{font-size:1.15rem;line-height:1}
+.cell .lb{display:none;font-size:.72rem;color:var(--ink);line-height:1.1}
+.cell.off{background:transparent;border-style:dashed;cursor:default;opacity:.45}
+.cell.sel{border-color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.cell.now .n{background:var(--ink);color:#fff;border-radius:6px;padding:0 5px;align-self:flex-start}
+.cell.light{background:#F4F7F2}
+@media(min-width:640px){.cell{min-height:84px}.cell .lb{display:block}}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:12px 2px 0;font-size:.78rem;color:var(--mut)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+.detail{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.wk{margin:0;color:var(--mut);font-size:.85rem}
+.detail h3{margin:2px 0 12px;font-size:1.5rem;font-weight:800;text-transform:capitalize;letter-spacing:-.01em}
+.session{border-left:6px solid var(--c);background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:14px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.session b{font-size:1.05rem}
+.session .big{font-size:1.1rem;font-weight:600;margin:3px 0}
+.session ul{margin:6px 0 0;padding-left:18px;color:var(--mut);font-size:.88rem}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:grid;grid-template-columns:54px 1fr;gap:8px;padding:9px 0;border-top:1px solid var(--line)}
+.tl li:first-child{border-top:0}
+.tl .t{font-weight:800;font-size:.95rem}
+.tl .k{font-weight:600}
+.tl .d{color:var(--mut);font-size:.9rem}
+.tl li.sess .k{color:var(--c)}
+.note{margin:12px 0 0;padding:9px 12px;border-radius:10px;background:#F1F4E6;border:1px solid #DCE4BF;font-size:.88rem}
+.note+.note{margin-top:8px}
+.kcal{margin:12px 0 0;font-size:.82rem;color:var(--mut)}
+
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+.tools button{border:0;background:var(--ink);color:#fff;border-radius:10px;padding:10px 16px;cursor:pointer;font-weight:600}
+.tools span{font-size:.82rem;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Cap sur le 10 km</h1>
+    <p class="sub">Perte de poids et préparation trail, du 12 octobre 2026 à février 2027. Cafétéria le midi, séances le soir.</p>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="profile">
+    <h2>Profil de la préparation</h2>
+    <p>Durée de la sortie longue du week-end, semaine après semaine. Touche un point pour ouvrir la semaine.</p>
+    <svg id="profile" viewBox="0 0 340 92" role="img" aria-label="Évolution de la durée de la sortie longue sur 17 semaines"></svg>
+  </div>
+</header>
+
+<div class="layout">
+  <section class="cal" aria-label="Calendrier">
+    <div class="nav">
+      <button id="prev" aria-label="Mois précédent">‹</button>
+      <h2 id="mname"></h2>
+      <button id="next" aria-label="Mois suivant">›</button>
+      <button class="today" id="gotoToday">Aujourd’hui</button>
+    </div>
+    <div class="dows"><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span></div>
+    <div class="grid" id="grid"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section class="detail" id="detail" aria-live="polite"></section>
+</div>
+
+<div class="tools">
+  <button id="ics">Ajouter les séances à mon agenda (.ics)</button>
+  <span>Le fichier contient les 17 semaines de séances avec les horaires du soir.</span>
+</div>
+
+</div>
+
+<script>
+/* ============ Réglages à modifier si besoin ============ */
+const START = new Date(2026, 9, 12);   // lundi 12 octobre 2026
+const RACE  = new Date(2027, 1, 6);    // date de la course : à ajuster
+const TOTAL = 119;                      // 17 semaines
+const DAY = 86400000;
+
+/* ============ Données ============ */
+const TYPES = {
+  run:  {icon:'🏃', name:'Course',          color:'#D9A400'},
+  swim: {icon:'🏊', name:'Piscine',         color:'#2C73C4'},
+  str:  {icon:'💪', name:'Renfo maison',    color:'#C23B3B'},
+  walk: {icon:'🚶', name:'Marche active',   color:'#8A958F'},
+  long: {icon:'🌲', name:'Sortie longue',   color:'#2E8B57'},
+  race: {icon:'🏁', name:'Course',          color:'#12231E'}
+};
+
+// [séance lundi, séance jeudi, sortie longue samedi, minutes de la sortie, phase, allégée]
+const WEEKS = [
+  ["8 × (1' course / 1'30 marche)","8 × (1' course / 1'30 marche)","45' de marche rapide",45,"Mise en route",0],
+  ["8 × (2' / 1'30)","8 × (2' / 1'30)","50' de marche avec 5 × 1' de trot",50,"Mise en route",0],
+  ["6 × (3' / 1'30)","6 × (3' / 1'30)","40' en 4' course / 1' marche",40,"Mise en route",0],
+  ["5 × (5' / 1')","5 × (5' / 1')","40' en 5' / 1'",40,"Semaine allégée",1],
+  ["4 × (7' / 1')","4 × (7' / 1')","50' en 8' / 1'",50,"Construction",0],
+  ["3 × (10' / 1')","3 × (10' / 1')","55' en 10' / 1'",55,"Construction",0],
+  ["2 × (15' / 2')","25' en continu","60' en 12' / 1' (environ 6 km)",60,"Construction",0],
+  ["25' en continu","20' en continu","5 km, pauses de marche à volonté",45,"Semaine allégée",1],
+  ["30' en continu","25' avec 6 × 30\" d’accélération","6 km sur chemin",60,"Endurance",0],
+  ["30' en continu","30' en continu","7 km sur chemin",70,"Endurance",0],
+  ["35' en continu","30' en continu","7 km sur chemin",70,"Endurance",0],
+  ["30' en continu","25' en continu","6 km tranquille",60,"Semaine allégée (fêtes)",1],
+  ["35' en continu","30' avec 6 côtes courtes","8 km sur chemin",80,"Spécifique trail",0],
+  ["40' en continu","30' avec 8 côtes courtes","9 km sur chemin",90,"Spécifique trail",0],
+  ["40' en continu","35' en continu","10 km à allure lente : répétition générale",100,"Spécifique trail",0],
+  ["30' en continu","25' en continu","8 km tranquille",75,"Semaine allégée",1],
+  ["25' facile","20' avec 4 accélérations","5 km tranquille (si la course n’est pas ce week-end)",90,"Affûtage et course",1]
+];
+
+const BK = {
+  A:"Porridge : 60 g de flocons d’avoine, lait, 1 banane, cannelle",
+  B:"3 œufs brouillés, 2 tranches de pain complet, 1 fruit",
+  C:"200 g de fromage blanc 0 %, 30 g de flocons d’avoine, fruits rouges"
+};
+const BK_BY_DOW = ['A','B','C','B','A','C','B'];
+
+const LUNCH = [
+  "Viande ou poisson grillé, double portion de légumes, 1 féculent (riz ou pâtes, la taille d’un poing).",
+  "Volaille ou poisson, légumes à volonté, 1 féculent. Sauce servie à part.",
+  "Cherche les légumineuses (lentilles, pois chiches) ou un œuf, plus des légumes.",
+  "Viande maigre, légumes, 1 féculent. Évite gratins et plats en sauce.",
+  "Poisson, légumes, pomme de terre vapeur. Pas de frites."
+];
+const LUNCH_RULES = "À la cafétéria : ½ assiette de légumes, ¼ protéine, ¼ féculent. Dessert : fruit ou yaourt nature. Pas de frites, de viennoiserie ni de soda.";
+
+const DINNER = [
+  "Poulet, riz, légumes (cuisiné d’avance)",
+  "Omelette de 3 œufs, pommes de terre, salade, 1 yaourt",
+  "Lentilles, 2 œufs, légumes",
+  "Chili : bœuf haché 5 %, haricots rouges, riz",
+  "Poisson ou thon, légumes vapeur, riz",
+  "Pâtes complètes, poulet, légumes",
+  "Soupe de légumes, 2 œufs, pain complet (léger après le repas plaisir)"
+];
+
+const PRE = {
+  run:"1 banane et 2 galettes de riz, 30 à 45 min avant de partir",
+  swim:"1 yaourt grec et 1 fruit",
+  str:"100 g de fromage blanc et 1 pomme",
+  walk:"1 poignée d’amandes (20 g) et 1 pomme",
+  long:"1 yaourt et 1 fruit",
+  race:"1 yaourt et 1 fruit"
+};
+
+const STRENGTH = ["Squats","Fentes alternées","Pompes (sur les genoux si besoin)","Pont fessier","Gainage planche","Rowing avec sac à dos chargé ou élastique","Montées de genoux sur place"];
+
+/* ============ Outils ============ */
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,'0');
+const key = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const strip = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const idx = d => Math.round((strip(d) - START) / DAY);
+const sameDay = (a,b) => key(a) === key(b);
+const addDays = (d,n) => new Date(d.getFullYear(), d.getMonth(), d.getDate()+n);
+const dowOf = d => (d.getDay()+6)%7;
+
+function sessionFor(week, dow, date){
+  const w = WEEKS[week];
+  switch(dow){
+    case 0: return {type:'run', title:'Course et marche', detail:w[0], time:'18h30', mins:50,
+      steps:["5' de marche pour s’échauffer","Allure lente : tu dois pouvoir parler","5' de marche pour finir"]};
+    case 1: return {type:'swim', title:'Piscine, intervalles', time:'18h30', mins:45,
+      detail:`${week<8?8:12} × 50 m rapide, 30 s de repos`,
+      steps:["10' d’échauffement, nage tranquille","Série d’intervalles","5' de retour au calme"]};
+    case 2: return {type:'str', title:'Renfo à la maison', time:'18h30', mins:35,
+      detail:`${week<8?3:4} tours, 45 s d’effort puis 15 s de repos`,
+      steps:STRENGTH.concat(["1 min de pause entre les tours"])};
+    case 3: return {type:'run', title:'Course et marche', detail:w[1], time:'18h30', mins:50,
+      steps:["5' de marche pour s’échauffer","Allure lente : tu dois pouvoir parler","5' de marche pour finir"]};
+    case 4: return {type:'walk', title:'Marche active', detail:"30 à 45 min d’un bon pas, puis étirements", time:'18h30', mins:45, steps:[]};
+    case 5:
+      if(week===16 && sameDay(date,RACE))
+        return {type:'race', title:'Jour de course', detail:"Ton premier trail de 10 km. Pars lentement, marche dans les côtes, bois à chaque ravito.", time:'Selon départ', mins:120,
+          steps:["Rien de nouveau : même petit-déj, mêmes chaussures","Arrive 1 h avant le départ","Savoure l’arrivée"]};
+      return {type:'long', title:'Sortie longue', detail:w[2], time:'10h00', mins:w[3]+15,
+        steps:["En journée, pour profiter de la lumière","Cherche des chemins ou un parc","Marche dans les côtes, c’est normal en trail"]};
+    case 6: return {type:'swim', title:'Piscine, facile', detail:"30 min de nage continue à allure confortable", time:'18h30', mins:35, steps:[]};
+  }
+}
+
+function planFor(date){
+  const i = idx(date);
+  if(i<0 || i>=TOTAL) return null;
+  const week = Math.floor(i/7), dow = i%7;
+  const s = sessionFor(week, dow, date);
+  return {i, week, dow, s, w:WEEKS[week]};
+}
+
+/* ============ Profil (SVG) ============ */
+function drawProfile(selWeek){
+  const X = i => 14 + i*19.5, Y = m => 74 - (m/100)*52;
+  const pts = WEEKS.map((w,i)=>[X(i),Y(w[3])]);
+  const line = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area = line + ` L${X(16)} 78 L${X(0)} 78 Z`;
+  let h = `<path d="${area}" fill="#2E8B57" fill-opacity=".14"/>
+           <path d="${line}" fill="none" stroke="#2E8B57" stroke-width="2" stroke-linejoin="round"/>
+           <line x1="10" x2="330" y1="78" y2="78" stroke="#D2D9D3"/>`;
+  pts.forEach((p,i)=>{
+    const sel = i===selWeek, light = WEEKS[i][5];
+    h += `<g class="pt" data-w="${i}" tabindex="0" role="button" aria-label="Semaine ${i+1}">
+            <circle cx="${p[0]}" cy="${p[1]}" r="12" fill="transparent"/>
+            <circle cx="${p[0]}" cy="${p[1]}" r="${sel?5.5:3}" fill="${sel?'#12231E':(light?'#fff':'#2E8B57')}" stroke="${sel?'#fff':'#2E8B57'}" stroke-width="${sel?2:1.5}"/>
+          </g>`;
+    if(i%4===0 || i===16) h += `<text x="${p[0]}" y="90" font-size="8" fill="#5D6D66" text-anchor="middle">S${i+1}</text>`;
+  });
+  h += `<text x="${pts[16][0]-4}" y="${pts[16][1]-9}" font-size="12" text-anchor="end">🏁</text>`;
+  $('profile').innerHTML = h;
+  $('profile').querySelectorAll('.pt').forEach(g=>{
+    const go = ()=>selectDate(addDays(START, +g.dataset.w*7));
+    g.addEventListener('click', go);
+    g.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();go();} });
+  });
+}
+
+/* ============ Calendrier ============ */
+const MIN_M = new Date(2026,9,1), MAX_M = new Date(2027,1,1);
+let view = new Date(2026,9,1), selected = START;
+
+function renderLegend(){
+  $('legend').innerHTML = Object.keys(TYPES).filter(k=>k!=='race').map(k=>
+    `<span><i style="background:${TYPES[k].color}"></i>${TYPES[k].name}</span>`).join('') +
+    `<span><i style="background:#12231E"></i>Course</span>`;
+}
+
+function renderMonth(){
+  const y = view.getFullYear(), m = view.getMonth();
+  $('mname').textContent = view.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  $('prev').disabled = view <= MIN_M;
+  $('next').disabled = view >= MAX_M;
+  const first = new Date(y,m,1), offset = dowOf(first), nd = new Date(y,m+1,0).getDate();
+  const today = new Date();
+  let h = '';
+  for(let b=0;b<offset;b++) h += '<div></div>';
+  for(let d=1; d<=nd; d++){
+    const date = new Date(y,m,d), p = planFor(date);
+    const cls = ['cell'];
+    if(!p) cls.push('off');
+    if(sameDay(date,selected)) cls.push('sel');
+    if(sameDay(date,today)) cls.push('now');
+    if(p && p.w[5]) cls.push('light');
+    const t = p ? TYPES[p.s.type] : null;
+    h += `<button class="${cls.join(' ')}" data-date="${key(date)}" ${p?'':'tabindex="-1" aria-disabled="true"'} ${t?`style="--c:${t.color}"`:''}
+            aria-label="${date.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}${t?', '+t.name:''}">
+            <span class="n">${d}</span>${t?`<span class="ic">${t.icon}</span><span class="lb">${p.s.type==='race'?'Course':t.name}</span>`:''}
+          </button>`;
+  }
+  $('grid').innerHTML = h;
+  $('grid').querySelectorAll('.cell:not(.off)').forEach(c=>{
+    const [yy,mm,dd] = c.dataset.date.split('-').map(Number);
+    c.addEventListener('click', ()=>selectDate(new Date(yy,mm-1,dd), true));
+  });
+}
+
+/* ============ Détail d’une journée ============ */
+function renderDetail(){
+  const p = planFor(selected), box = $('detail');
+  const long = selected.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  if(!p){
+    box.innerHTML = `<p class="wk">Hors programme</p><h3>${long}</h3><p>Le plan va du 12 octobre 2026 au 7 février 2027.</p>`;
+    return;
+  }
+  const {s, dow, week, w, i} = p, t = TYPES[s.type];
+  const weekend = dow>=5;
+  const items = [];
+  const sessItem = `<li class="sess" style="--c:${t.color}"><span class="t">${s.time.replace('Selon départ','—')}</span><div><div class="k">${t.icon} Séance : ${s.title}</div><div class="d">${s.detail}</div></div></li>`;
+  const bk = `<li><span class="t">${dow===5?'08h30':dow===6?'09h00':'07h30'}</span><div><div class="k">Petit-déjeuner</div><div class="d">${BK[BK_BY_DOW[dow]]}</div></div></li>`;
+  const lunch = dow<5
+    ? `<li><span class="t">12h30</span><div><div class="k">Déjeuner à la cafétéria</div><div class="d">${LUNCH[dow]}</div></div></li>`
+    : dow===5
+      ? `<li><span class="t">13h00</span><div><div class="k">Déjeuner à la maison</div><div class="d">Pois chiches, légumes rôtis, 1 œuf, pain complet</div></div></li>`
+      : `<li><span class="t">13h00</span><div><div class="k">Repas plaisir</div><div class="d">Mange ce que tu aimes, une portion normale, sans culpabilité. Tu reprends au repas suivant.</div></div></li>`;
+  const snack = `<li><span class="t">${dow===5?'16h30':'17h30'}</span><div><div class="k">${dow===5?'Collation de récupération':'Collation avant la séance'}</div><div class="d">${PRE[s.type]}</div></div></li>`;
+  const dinner = `<li><span class="t">${dow===5?'20h00':'20h15'}</span><div><div class="k">Dîner</div><div class="d">${DINNER[dow]}</div></div></li>`;
+
+  if(dow===5) items.push(bk, sessItem, lunch, snack, dinner);
+  else if(dow===6) items.push(bk, lunch, snack, sessItem, dinner);
+  else items.push(bk, lunch, snack, sessItem, dinner);
+
+  const notes = [];
+  if(dow===0) notes.push("⚖️ Pesée du lundi : à jeun, après être passé aux toilettes. Note aussi ton tour de taille.");
+  if(i===0) notes.push("Premiers jours : utilise ce que tu as dans les placards (féculent, protéine en boîte, légumes surgelés). Range les biscuits et les sodas dès ce soir.");
+  if(i===1) notes.push("Dîner de dépannage : féculent, thon ou œufs, légumes surgelés. Les courses arrivent demain.");
+  if(i===2) notes.push("🛒 Courses de la semaine, puis cuisine d’avance : riz, poulet, légumes pour les 3 prochains jours.");
+  if(i>2 && dow===2) notes.push("🍳 Cuisine d’avance : riz, poulet et légumes pour jeudi, vendredi et samedi.");
+  if(dow===6 && i>6) notes.push("🛒 Courses de la semaine et cuisine d’avance pour lundi, mardi et mercredi.");
+  if(s.type==='run') notes.push("🔦 Il fait nuit tôt : frontale, vêtements réfléchissants, et un parcours éclairé.");
+  const m = selected.getMonth(), d = selected.getDate();
+  if((m===11 && (d===24||d===25||d===31)) || (m===0 && d===1)) notes.push("🎄 Repas de fête : profite, une assiette normale. Pas de rattrapage ensuite, tu reprends au repas suivant.");
+  if(w[5] && dow===0) notes.push("Cette semaine est allégée : le corps se renforce pendant le repos.");
+  notes.push("Faim le soir ? 1 skyr, une soupe ou 2 œufs durs.");
+
+  const lunchRule = dow<5 ? `<p class="note">${LUNCH_RULES}</p>` : '';
+
+  box.innerHTML = `
+    <p class="wk">Semaine ${week+1} sur 17, ${w[4].toLowerCase()}</p>
+    <h3>${long}</h3>
+    <div class="session" style="--c:${t.color}">
+      <b>${t.icon} ${s.title}</b>
+      <div class="big">${s.detail}</div>
+      <div class="d" style="color:var(--mut);font-size:.88rem">${s.time==='Selon départ'?'Selon l’heure de départ':'À '+s.time}, durée environ ${s.mins} min</div>
+      ${s.steps.length?`<ul>${s.steps.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}
+    </div>
+    <ol class="tl">${items.join('')}</ol>
+    ${lunchRule}
+    ${notes.map(n=>`<p class="note">${n}</p>`).join('')}
+    <p class="kcal">Objectif du jour : environ 2 000 kcal et 140 à 160 g de protéines. 2 L d’eau minimum.</p>`;
+}
+
+function selectDate(date, fromGrid){
+  selected = strip(date);
+  if(selected.getMonth()!==view.getMonth() || selected.getFullYear()!==view.getFullYear())
+    view = new Date(selected.getFullYear(), selected.getMonth(), 1);
+  const p = planFor(selected);
+  renderMonth(); renderDetail(); drawProfile(p?p.week:-1);
+  if(fromGrid && window.innerWidth<860) $('detail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ============ Compte à rebours ============ */
+function renderCount(){
+  const diff = Math.round((START - strip(new Date()))/DAY);
+  const raceLeft = Math.round((RACE - strip(new Date()))/DAY);
+  let txt;
+  if(diff>0) txt = `Départ dans ${diff} jour${diff>1?'s':''}, lundi 12 octobre`;
+  else if(raceLeft>=0) txt = `Jour ${-diff+1} sur ${TOTAL}, course dans ${raceLeft} jour${raceLeft>1?'s':''}`;
+  else txt = "Programme terminé, bravo";
+  $('count').textContent = txt;
+}
+
+/* ============ Export agenda (.ics) ============ */
+function exportICS(){
+  const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Cap sur le 10 km//FR","CALSCALE:GREGORIAN"];
+  const fmt = (d,h,m)=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(h)}${pad(m)}00`;
+  for(let i=0;i<TOTAL;i++){
+    const date = addDays(START,i), p = planFor(date); if(!p) continue;
+    const s = p.s, t = TYPES[s.type];
+    const mt = /(\d+)h(\d+)/.exec(s.time);
+    const h = mt?+mt[1]:9, mi = mt?+mt[2]:0;
+    const end = new Date(date.getFullYear(),date.getMonth(),date.getDate(),h,mi+s.mins);
+    const desc = (s.detail+(s.steps.length?" - "+s.steps.join(" / "):"")).replace(/\n/g," ").replace(/,/g,"\\,");
+    lines.push("BEGIN:VEVENT",
+      `UID:cap10km-${key(date)}@plan`,
+      `DTSTAMP:${fmt(new Date(),0,0).slice(0,9)}000000Z`,
+      `DTSTART:${fmt(date,h,mi)}`,
+      `DTEND:${fmt(end,end.getHours(),end.getMinutes())}`,
+      `SUMMARY:${t.icon} ${s.title}`,
+      `DESCRIPTION:${desc}`,
+      "END:VEVENT");
+  }
+  lines.push("END:VCALENDAR");
+  const blob = new Blob([lines.join("\r\n")], {type:'text/calendar;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'cap-sur-le-10km.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ============ Démarrage ============ */
+$('prev').onclick = ()=>{ view = new Date(view.getFullYear(), view.getMonth()-1, 1); renderMonth(); };
+$('next').onclick = ()=>{ view = new Date(view.getFullYear(), view.getMonth()+1, 1); renderMonth(); };
+$('gotoToday').onclick = ()=>{
+  const t = strip(new Date()), i = idx(t);
+  selectDate(i>=0 && i<TOTAL ? t : START);
+};
+$('ics').onclick = exportICS;
+
+renderLegend(); renderCount();
+(function init(){
+  const t = strip(new Date()), i = idx(t);
+  selectDate(i>=0 && i<TOTAL ? t : START);
+})();
+</script>
+</body>
+</html>
